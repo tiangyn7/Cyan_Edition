@@ -6,27 +6,35 @@
 - [2. 项目结构](#2-项目结构)
 - [3. 功能特性](#3-功能特性)
 - [4. 环境准备](#4-环境准备)
-  - [4.1 Python 环境](#41-python-环境)
+   - [4.1 Python 环境](#41-python-环境)
   - [4.2 创建并激活虚拟环境](#42-创建并激活虚拟环境)
   - [4.3 安装依赖](#43-安装依赖)
   - [4.4 配置 API 密钥](#44-配置-api-密钥)
-- [5. 数据文件准备](#5-数据文件准备)
-  - [5.1 qa_data.jsonl (精确问答数据)](#51-qa_datajsonl-精确问答数据)
-  - [5.2 prompts.jsonl (LLM 系统指令)](#52-promptsjsonl-llm-系统指令)
-- [6. 运行项目](#6-运行项目)
-- [7. 体验地址](#7-体验地址)
-- [8. 技术框架与依赖](#8-技术框架与依赖)
-  - [8.1 后端依赖（Python）](#81-后端依赖python)
-  - [8.2 前端依赖](#82-前端依赖)
-  - [8.3 数据依赖](#83-数据依赖)
-- [9. API 接口说明](#9-api-接口说明)
-- [10. 注意事项](#10-注意事项)
+- [5. 运行项目](#5-运行项目)
+- [6. API 接口文档](#6-api-接口文档)
+- [7. 技术框架与依赖](#7-技术框架与依赖)
+- [8. 注意事项](#8-注意事项)
+- [9. 体验地址](#9-体验地址)
 
 ---
 
 ## 1. 项目简介
 
-这是一个基于 Flask 构建的简单聊天机器人后端服务，集成了精确问答匹配和大型语言模型（LLM）调用功能。它旨在提供一个灵活的聊天体验，既能对预设问题进行精准应答，也能调用 LLM 智能回复。
+Cyan Edition 是一个全栈聊天机器人应用，后端基于 FastAPI 提供 RESTful API 和 SSE（Server-Sent Events）流式响应，数据持久化使用 SQLite（可无缝切换至 PostgreSQL/MySQL）。前端采用 Vue 3 组合式 API，实现响应式界面、实时流式消息渲染、会话侧边栏、主题切换等现代 Web 体验。
+
+核心能力：
+
+* **多会话隔离，历史消息永久存储**
+
+* **流式生成 AI 回复，首字延迟低**
+
+* **支持多模型（豆包 Pro / Mini / Code、DeepSeek V3.2）**
+
+* **可调节温度（0.0~2.0），控制回复随机性**
+
+* **深色模式 / 浅色模式，本地持久化偏好**
+
+* **Markdown 渲染 + 代码高亮（highlight.js）**
 
 ## 2. 项目结构
 
@@ -74,7 +82,7 @@ Cyan_Edition/
 
 ```bash
 # 进入项目根目录
-cd ML-AI-CHAT/
+cd Cyan_Edition/
 
 # 创建虚拟环境
 python3 -m venv venv
@@ -93,66 +101,81 @@ source venv/bin/activate
 ```bash
 cd backend/
 pip install -r requirements.txt
+
+requirements.txt
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-dotenv
+httpx
+python-multipart
 ```
+**注意：** 火山引擎 Ark SDK 由 volcenginesdkarkruntime 提供，已在 config.py 中导入，无需单独安装（若缺失可执行 pip install volcengine-python-sdk[ark]）。
 
 ### 4.4 配置 API 密钥
 在项目根目录创建 .env 文件。
 添加如下内容：
 ```bash
 env
-DOUBAO_API_KEY="YOUR_API_KEY"
-确保 config.py 能正确读取该变量（示例）：
-Python
-import os
-from dotenv import load_dotenv
-from doubao.client import DoubaoClient
-
-load_dotenv()
-DOUBAO_API_KEY = os.getenv("YOUR_API_KEY")
-client = DoubaoClient(api_key=YOUR_API_KEYY)
+YOUR_API_KEY=你的火山引擎 Ark API Key
+获取方式：登录火山引擎控制台，进入“模型推理” → “API Key 管理”创建。
 ```
+config.py 会自动读取该文件并初始化 Ark 客户端。
 
-## 5. 数据文件准备
-在 data/ 目录下，确保以下两个 .jsonl 文件：
-
-### 5.1 qa_data.jsonl (精确问答数据)
-每行一个 JSON 对象，包含 query 和 response 字段。例如：
+## 5. 运行项目
 ```bash
-JSON
-{"query": "你好", "response": "111！我是AG超玩会梦泪，扣1送地狱火！"}
-5.2 prompts.jsonl (LLM 系统指令)
-每行一个 JSON 对象，包含 LLM 角色设定。例如：
-
-JSON
-{"role": "system", "content": "你是AG超玩会梦泪。你会用夸张表情和游戏梗互动，用直播互动话术回应粉丝，用简洁游戏术语解决问题，用直播整活话术回应粉丝。"}
+cd backend
+python main.py
 ```
+服务默认在 http://localhost:5000 运行。
 
-## 6. 运行项目
 
-# 激活虚拟环境（如未激活）
+## 6. API 接口文档
+### 6.1 获取会话列表
 ```bash
-cd backend/
-python app.py
+GET /api/conversations
+response：[{ id, title, created_at }, ...]
 ```
-服务默认在 http://0.0.0.0:5000 运行。
-
-前端页面：浏览器打开 frontend/index.html，或通过前端服务器访问。
-
-## 7. 体验地址
-https://dalonggou.xyz/
-
-## 8. 技术框架与依赖
-### 8.1 后端依赖（Python）
-#### Flask
-##### python-dotenv
-##### Flask-CORS
-##### requests
-安装：
-
+#### 6.2 新建会话
 ```bash
-pip install -r requirements.txt
+POST /api/conversations/new
+response：新建的会话对象。
 ```
-### 8.2 前端依赖
+#### 6.3 发送消息（流式）
+```bash
+POST /api/chat
+
+json
+{
+  "messages": [
+    { "role": "user", "content": "你好" },
+    { "role": "assistant", "content": "你好！有什么可以帮助你的吗？" }
+  ],
+  "model_id": "xx-xx-xx",
+  "conversation_id": 1,
+  "temperature": 0.7
+}
+messages：完整对话历史（按时间升序）。
+model_id：模型标识符（从 models 列表获取）。
+conversation_id：可选，若为 null 则自动创建新会话。
+temperature：可选，默认 0.7。
+
+response：text/event-stream
+data: {"content": "增量文本", "conv_id": 1}
+```
+#### 6.4 获取会话历史
+```bash
+GET /api/history/{conv_id}
+response：[{ id, role, content, reasoning, created_at }, ...]
+```
+### 6.5 删除会话
+```bash
+DELETE /api/conversations/{conv_id}
+response：{"status": "success"}
+```
+
+## 7. 技术框架与依赖
 HTML5/CSS3/JavaScript
 Tailwind CSS
 jQuery
@@ -161,35 +184,8 @@ jQuery
 ```bash
 npm install tailwindcss postcss autoprefixer --save-dev
 ```
-### 8.3 数据依赖
-JSONL 文件格式（qa_data.jsonl、prompts.jsonl）
 
+## 8. 注意事项
 
-## 9. API 接口说明
-```bash
-POST /api/chat
-
-请求体（JSON）：
-JSON
-{
-    "message": "用户输入的消息"
-}
-响应体（JSON）：
-成功：
-
-JSON
-{
-    "message": "AI 或预设的回复",
-    "status": "success"
-}
-错误：
-
-JSON
-{
-    "error": "错误信息",
-    "status": "error"
-}
-```
-## 10. 注意事项
-#### 生产环境建议配置 Nginx 或其他反向代理处理跨域和 HTTPS。确保 config.py 能正确从 .env 文件加载 YOUR_API_KEY。
-#### 阅读模型官方引擎文档，配置必要的SDK
+## 9. 体验地址
+https://dalonggou.xyz/
