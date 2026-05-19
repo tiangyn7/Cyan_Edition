@@ -32,16 +32,20 @@
 
 ```plaintext
 Cyan_Edition/
-├── .env                    # 环境变量配置文件（存储 API 密钥，请勿提交到版本控制）
-├── README.md               # 项目说明文档
-├── backend/                # Flask 后端应用
-│   ├── app.py              # 主应用程序入口
-│   ├── config.py           # 配置文件（API 密钥加载、客户端初始化）
-│   └── requirements.txt    # Python 依赖列表
-├── frontend/               # 前端静态文件
-│   ├── index.html          # 主页面
-│   └── static/             # CSS、JS 等静态资源
-└── venv/                   # Python 虚拟环境（请勿提交到版本控制）
+├── backend/                     # 后端服务目录
+│   ├── config.py                # 加载 API Key 及初始化 Ark 客户端
+│   ├── database.py              # SQLAlchemy 模型与数据库会话
+│   ├── main.py                  # FastAPI 主程序（含所有 API 路由）
+│   ├── requirements.txt         # Python 依赖清单
+│   └── Key.env                  # API 密钥文件（需自行创建，勿提交）
+├── frontend/                    # 前端静态资源目录
+│   ├── index.html               # Vue 3 主页面模板
+│   └── static/
+│       ├── style.css            # 全局样式与动画
+│       └── app.js               # Vue 3 组合式 API 业务逻辑
+├── test_concurrent.py           # 并发测试脚本（可选）
+├── chat.db                      # SQLite 数据库（自动生成）
+└── README.md                    # 项目说明文档
 ```
 
 ## 3. 功能特性
