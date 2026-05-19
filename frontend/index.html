@@ -4,290 +4,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>梦泪AI</title>
-    <!-- Font Awesome 图标库 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Noto Sans SC 和 Inter 字体 CDN -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <!-- Tailwind CSS CDN - IMPORTANT: This tag must be loaded before your custom CSS -->
+    <title>Cyan Edition</title>
+
+    <!-- 主题初始化脚本：在页面渲染前执行，避免深色模式闪烁 -->
+    <script>
+        (function () {
+            // 从 localStorage 读取用户保存的主题偏好，若为 'dark' 则立即添加 dark 类
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <!-- Vue3 运行时（CDN 引入，无需工程化构建） -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Tailwind CSS 配置：深色模式使用 class 策略 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 自定义 CSS - MUST be loaded after Tailwind CSS to override its default styles -->
-    <link rel="stylesheet" href="/frontend/css/style.css">
+
+    <!-- Markdown 解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- 代码高亮库：主题样式 + 核心脚本 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
-    <div class="app-container flex h-screen w-full">
-        <!-- 侧边栏 -->
-        <div id="sidebar"
-            class="sidebar fixed top-0 left-0 bottom-0 z-50 w-64 transform -translate-x-full transition-all duration-300 bg-gray-100 border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-            <nav class="size-full flex flex-col">
-                <!-- 侧边栏头部 - 包含汉堡菜单按钮和标题 -->
-                <div class="sidebar-header flex items-center p-4 h-16  dark:border-gray-700">
-                    <button id="toggle-sidebar-btn"
-                        class="p-2 text-gray-500 rounded-full transition-colors duration-200">
-                        <i class="fas fa-bars"></i>
+<body
+    class="antialiased overflow-hidden bg-gray-50 text-zinc-800 dark:bg-[#0e0e10] dark:text-zinc-300 transition-colors duration-500">
+
+    <!-- Vue3 挂载点 -->
+    <div id="app" class="flex h-screen w-full">
+
+        <!-- ==================== 侧边栏 ==================== -->
+        <!-- 宽度通过 Vue 响应式变量控制：展开 18rem，收起 5rem -->
+        <aside :style="{ width: isSidebarOpen ? '18rem' : '5rem' }"
+            class="sidebar-transition flex flex-col bg-white dark:bg-[#161618] border-r border-gray-200 dark:border-white/5 relative z-30 shadow-2xl overflow-hidden transition-colors duration-500">
+
+            <!-- 顶部：菜单按钮 + 系统标题 -->
+            <div class="h-20 flex items-center shrink-0">
+                <div class="w-20 flex justify-center shrink-0">
+                    <!-- 侧边栏折叠/展开按钮 -->
+                    <button @click="isSidebarOpen = !isSidebarOpen"
+                        class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-zinc-500 transition-colors">
+                        <i class="fas fa-bars text-lg"></i>
                     </button>
                 </div>
+                <!-- 侧边栏展开时显示系统名称，收起时隐藏（带过渡动画） -->
+                <transition name="sidebar-fade">
+                    <span v-if="isSidebarOpen"
+                        class="text-[11px] font-black tracking-[0.3em] uppercase text-zinc-600 dark:text-zinc-400 whitespace-nowrap">Cyan
+                        Edition</span>
+                </transition>
+            </div>
 
-                <div class="sidebar-body h-full overflow-y-auto p-3 flex flex-col">
-                    <ul class="space-y-1.5 flex-grow">
-                        <li>
-                            <button
-                                class="new-chat-btn w-full flex items-center gap-x-3 py-2.5 px-4 text-base font-semibold rounded-full hover:bg-gray-200 transition-colors duration-200"
-                                id="new-chat-btn-sidebar">
-                                <i class="fas fa-plus-circle shrink-0 size-5"></i>
-                                <span class="sidebar-item-text">新聊天</span>
-                            </button>
-                        </li>
-                        <!-- 聊天历史列表将由JS动态添加 -->
-                        <div id="chat-history" class="space-y-1 mb-4">
-                            <!-- 聊天历史项将由JS动态添加 -->
-                        </div>
-                    </ul>
+            <!-- 新建对话按钮 -->
+            <div class="px-4 mb-6 shrink-0">
+                <button @click="startNewChat"
+                    class="h-12 flex items-center bg-transparent hover:bg-gray-100 dark:hover:bg-[#27272a] text-zinc-800 dark:text-zinc-100 rounded-2xl border border-transparent hover:border-gray-200 dark:hover:border-white/5 transition-all overflow-hidden"
+                    :class="[isSidebarOpen ? 'w-full' : 'w-12 mx-auto justify-center']">
+                    <div class="w-12 h-12 flex justify-center items-center shrink-0"><i class="fas fa-plus text-sm"></i>
+                    </div>
+                    <transition name="sidebar-fade">
+                        <span v-if="isSidebarOpen"
+                            class="text-xs font-bold tracking-wide whitespace-nowrap pr-6 dark:text-zinc-200">新建对话</span>
+                    </transition>
+                </button>
+            </div>
 
-                    <!-- 侧边栏底部：主题、设置、重放聊天、清空聊天 -->
-                    <div class="sidebar-footer mt-auto pt-4  dark:border-gray-700 space-y-2">
-                        <!-- 主题切换 (现在是带有月亮图标的按钮，开关会隐藏) -->
-                        <div id="theme-toggle-wrapper"
-                            class="sidebar-item theme-toggle-wrapper flex justify-between items-center py-2 px-3 rounded-lg cursor-pointer">
-                            <span class="flex items-center gap-x-3 text-sm text-gray-700 dark:text-gray-300">
-                                <i class="fas fa-moon"></i> <span class="sidebar-item-text">主题</span>
-                            </span>
-                            <!-- 实际的开关 input 保持不变，但其父 div 会在 CSS 中被隐藏 -->
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="theme-toggle" class="sr-only peer">
-                                <div
-                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
-                                </div>
-                            </label>
-                        </div>
-                        <!-- 设置链接 -->
-                        <a class="sidebar-item flex justify-between items-center gap-x-3 py-2 px-3 text-sm text-gray-700 rounded-lg dark:text-gray-300"
-                            href="#">
-                            <span class="flex items-center gap-x-3">
-                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M15 3h4a2 0 0 1 2 2v14a2 0 0 1-2 2h-4" />
-                                    <polyline points="10 17 15 12 10 7" />
-                                    <line x1="15" x2="3" y1="12" y2="12" />
-                                </svg>
-                                <span class="sidebar-item-text">设置</span>
-                            </span>
-                        </a>
-                        <!-- 重放聊天按钮 -->
-                        <button id="replay-chat-btn"
-                            class="sidebar-item w-full flex items-center gap-x-3 py-2 px-3 text-sm text-gray-700 rounded-lg cursor-pointer">
-                            <i class="fas fa-undo"></i>
-                            <span class="sidebar-item-text">重放聊天</span>
-                        </button>
-                        <!-- 清空聊天按钮 -->
-                        <button id="clear-chat-btn"
-                            class="sidebar-item w-full flex items-center gap-x-3 py-2 px-3 text-sm text-gray-700 rounded-lg cursor-pointer">
-                            <i class="fas fa-trash-alt"></i>
-                            <span class="sidebar-item-text">清空聊天</span>
-                        </button>
+            <!-- 会话列表：从后端获取，v-for 渲染，当前选中项高亮 -->
+            <nav class="flex-1 overflow-y-auto no-scrollbar space-y-3 px-4">
+                <div v-for="conv in conversations" :key="conv.id" @click="loadConversation(conv.id)"
+                    class="group cursor-pointer">
+                    <div class="h-12 flex items-center rounded-xl transition-all overflow-hidden" :class="[isSidebarOpen ? 'w-full' : 'w-12 mx-auto justify-center', 
+                                 currentConvId === conv.id ? 'bg-gray-100 dark:bg-[#27272a] text-zinc-900 dark:text-white border border-gray-200 dark:border-white/5 shadow-sm dark:shadow-lg' : 
+                                 'text-zinc-500 hover:bg-gray-50 dark:hover:bg-[#27272a]/50']">
+                        <div class="w-12 h-12 flex justify-center items-center shrink-0"><i
+                                class="far fa-comment-dots text-[14px]"></i></div>
+                        <transition name="sidebar-fade">
+                            <div v-if="isSidebarOpen" class="flex-1 flex justify-between items-center min-w-0 pr-4">
+                                <!-- 会话标题，超长截断显示省略号 -->
+                                <span class="text-[11px] font-medium truncate">{{ conv.title || '新对话' }}</span>
+                                <!-- 删除按钮：悬停时显示，使用 .stop 阻止事件冒泡（避免同时触发切换会话） -->
+                                <button @click.stop="openDeleteModal(conv.id)"
+                                    class="opacity-0 group-hover:opacity-100 text-zinc-400 dark:text-zinc-500 hover:text-red-500"><i
+                                        class="far fa-trash-alt text-[10px]"></i></button>
+                            </div>
+                        </transition>
                     </div>
                 </div>
             </nav>
-        </div>
-        <!-- 侧边栏结束 -->
 
-        <!-- 主内容区域 -->
-        <div id="main-chat-area"
-            class="main-chat-area relative h-screen w-full flex flex-col transition-all duration-300">
-            <!-- 主头部（顶部导航栏，包含  风格的品牌、模型选择和功能图标） -->
-            <div id="main-header"
-                class="main-header fixed top-0 w-full z-20 flex items-center justify-between px-4 py-3 sm:px-6 transition-all duration-300">
-                <!-- 左侧：ML 品牌和模型选择 -->
-                <div class="flex items-center">
-                    <div class="relative cursor-pointer" id="model-selector-container">
-                        <span class="text-xl font-bold text-gray-800 dark:text-gray-100">AG超玩会</span>
-                        <!-- 模型芯片 - 添加了 relative 类，并移入了 model-dropdown -->
+            <!-- 侧边栏底部：温度调节 + 主题切换 + 用户信息 -->
+            <div class="p-4 border-t border-gray-200 dark:border-white/5 shrink-0 bg-gray-50/50 dark:bg-zinc-900/10">
+
+                <!-- 温度参数调节滑块（**核心特色功能**） -->
+                <div class="mb-4">
+                    <!-- 侧边栏展开时显示完整滑块，收起时仅显示温度图标按钮 -->
+                    <div v-if="isSidebarOpen" class="px-2">
                         <div
-                            class="model-chip inline-flex items-center gap-x-1 ml-3 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 relative">
-                            <span id="current-model-name">Model</span>
-                            <i class="fas fa-caret-down text-gray-500 dark:text-gray-400 text-xs"></i>
-                            <!-- 模型/人设下拉菜单 - 现在位于 model-chip 内部 -->
-                            <div class="model-dropdown absolute left-0 hidden z-50" id="model-dropdown">
-                                <!-- 选项将由 JS 动态生成 -->
-                            </div>
+                            class="flex justify-between items-center mb-3 text-[10px] font-bold text-zinc-500 uppercase">
+                            当前模型温度 <span
+                                class="text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-400/10 px-2 rounded shadow-inner">{{
+                                temperature }}</span>
                         </div>
+                        <!-- 温度滑块：0.0-2.0，步长 0.1，通过 v-model 双向绑定到 temperature 变量 -->
+                        <input type="range" v-model="temperature" min="0" max="2" step="0.1"
+                            class="w-full h-1 bg-gray-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-600">
+                        <!-- 滑块两极标注：严谨 ↔ 发散 -->
+                        <div class="flex justify-between mt-2 text-[8px] text-zinc-400 dark:text-zinc-600 uppercase">
+                            <span>严谨</span><span>发散</span>
+                        </div>
+                    </div>
+                    <div v-else class="flex justify-center">
+                        <button @click="expandSidebar"
+                            class="w-10 h-10 rounded-xl flex items-center justify-center bg-transparent hover:bg-gray-200 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all"
+                            title="展开侧边栏调节温度">
+                            <i class="fas fa-thermometer-half text-lg"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- 右侧：刷新和个人头像 -->
-                <div class="flex items-center gap-x-2">
-                    <button type="button" class="p-2 text-gray-500 rounded-full transition-colors duration-200">
-                        <i class="fas fa-sync-alt"></i> <!-- 刷新图标 -->
-                    </button>
-                    <button type="button" class="p-2 text-gray-500 rounded-full transition-colors duration-200">
-                        <i class="fas fa-user-circle text-2xl"></i> <!-- 个人头像图标 -->
-                    </button>
+                <!-- 深色/浅色主题切换按钮 -->
+                <button @click="toggleTheme"
+                    class="flex items-center h-10 w-full rounded-xl hover:bg-gray-200 dark:hover:bg-white/5 transition-all overflow-hidden"
+                    :class="isSidebarOpen ? 'px-4' : 'justify-center'">
+                    <div class="w-6 flex justify-center shrink-0">
+                        <!-- 图标旋转切换动画 -->
+                        <transition name="theme-spin" mode="out-in">
+                            <i :key="isDarkMode ? 'moon' : 'sun'"
+                                :class="isDarkMode ? 'fas fa-moon text-indigo-400' : 'fas fa-sun text-amber-500'"></i>
+                        </transition>
+                    </div>
+                    <transition name="sidebar-fade">
+                        <span v-if="isSidebarOpen"
+                            class="ml-4 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                            {{ isDarkMode ? '深色模式' : '浅色模式' }}
+                        </span>
+                    </transition>
+                </button>
+
+                <!-- 用户信息展示 -->
+                <div class="mt-3 flex items-center h-14 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-all cursor-pointer overflow-hidden"
+                    :class="isSidebarOpen ? 'w-full' : 'w-12 mx-auto justify-center'">
+                    <div class="w-12 h-12 flex justify-center items-center shrink-0">
+                        <div
+                            class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+                            C</div>
+                    </div>
+                    <transition name="sidebar-fade">
+                        <div v-if="isSidebarOpen" class="ml-5 overflow-hidden">
+                            <p class="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 truncate">Cyan</p>
+                            <p class="text-[8px] text-zinc-500 dark:text-zinc-500 uppercase tracking-tighter">Pro
+                                Developer</p>
+                        </div>
+                    </transition>
                 </div>
             </div>
+        </aside>
 
-            <!-- 聊天消息容器 -->
-            <ul id="chat-container"
-                class="chat-container h-full overflow-y-auto space-y-5 px-4 sm:px-6 lg:px-8 max-w-4xl w-full mx-auto">
-                <!-- 欢迎屏幕（初始可见，有消息时隐藏） -->
-                <div id="welcome-screen"
-                    class="welcome-screen flex flex-col justify-center items-center h-full text-center mx-auto">
-                    <h2 class="text-3xl font-bold text-gray-800 sm:text-4xl dark:text-gray-100">欢迎使用梦泪AI</h2>
-                    <p class="mt-3 text-gray-600 dark:text-gray-400">您的智能对话伙伴</p>
-                    <div class="initial-prompts mt-10 flex flex-wrap justify-center gap-4">
-                        <div
-                            class="prompt-chip py-2 px-4 bg-gray-200 text-gray-700 rounded-full cursor-pointer hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                            告诉我一个关于编程的笑话</div>
-                        <div
-                            class="prompt-chip py-2 px-4 bg-gray-200 text-gray-700 rounded-full cursor-pointer hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                            解释一下量子计算</div>
-                        <div
-                            class="prompt-chip py-2 px-4 bg-gray-200 text-gray-700 rounded-full cursor-pointer hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                            帮我写一封邮件</div>
-                    </div>
+        <!-- ==================== 主内容区 ==================== -->
+        <main class="flex-1 flex flex-col relative overflow-hidden">
+
+            <!-- 顶部导航栏：状态指示 + 模型选择 -->
+            <header
+                class="h-20 flex items-center justify-between px-10 z-50 absolute top-0 w-full bg-white/80 dark:bg-[#0e0e10]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/5 transition-colors duration-500">
+
+                <!-- 左侧：在线状态指示 -->
+                <div class="flex items-center gap-3">
+                    <div class="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-600 rounded-full animate-pulse"></div>
+                    <span
+                        class="text-[10px] font-bold tracking-[0.2em] text-zinc-500 dark:text-zinc-400 uppercase">Engine
+                        Node</span>
                 </div>
 
-                <!-- 消息气泡模板（隐藏，通过 JS 克隆） -->
-                <!-- AI 消息模板 -->
-                <template id="ai-message-template">
-                    <li class="message-bubble-wrapper assistant py-2 sm:py-4">
-                        <div class="message-content-area flex w-full">
-                            <!-- AI 头像 -->
-                            <div
-                                class="shrink-0 size-8 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm">
-                                AI
-                            </div>
-                            <!-- AI 消息内容 -->
-                            <div
-                                class="message grow max-w-[90%] md:max-w-2xl w-full space-y-3 ml-4 p-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
-                                <div class="message-content text-sm prose dark:prose-invert max-w-none">
-                                    <!-- AI 消息文本将注入到这里 -->
-                                </div>
-                            </div>
-                        </div>
-                        <!-- AI 思考过程容器（默认隐藏） -->
-                        <div class="reasoning-container ml-12 mt-2 mb-2 hidden">
-                            <div
-                                class="reasoning-header flex items-center justify-between py-2 px-4 bg-gray-200 rounded-lg cursor-pointer dark:bg-gray-600 dark:text-gray-200">
-                                <span class="text-sm font-medium">显示思路</span>
-                                <div class="loading-dots hidden"><span></span><span></span><span></span></div>
-                                <i class="fas fa-caret-right text-gray-500 dark:text-gray-400"></i>
-                            </div>
-                            <div
-                                class="reasoning-content p-4 bg-white border border-t-0 border-gray-200 rounded-b-lg dark:bg-gray-800 dark:border-gray-700 prose dark:prose-invert max-w-none">
-                                <!-- 思考过程内容将注入到这里 -->
-                            </div>
-                        </div>
-                    </li>
-                </template>
+                <!-- 右侧：模型切换下拉菜单 -->
+                <div class="relative">
+                    <!-- 当前选中模型显示按钮 -->
+                    <button @click="isModelMenuOpen = !isModelMenuOpen"
+                        class="flex items-center gap-4 px-6 py-2.5 bg-gray-100 dark:bg-[#161618] border border-gray-200 dark:border-white/10 rounded-full hover:border-gray-300 dark:hover:border-zinc-700 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-200 shadow-sm dark:shadow-xl">
+                        当前模型：{{ selectedModel.shortName }}
+                    </button>
 
-                <!-- 用户消息模板 -->
-                <!-- IMPORTANT: 确保这里是 <template> 标签，而不是 <li> 标签带有 hidden 类 -->
-                <template id="user-message-template">
-                    <li class="message-bubble-wrapper user py-2 sm:py-4">
-                        <div class="message-content-area flex w-full justify-end">
-                            <!-- 用户消息内容 -->
-                            <div
-                                class="message grow max-w-[90%] md:max-w-2xl w-full space-y-3 mr-4 p-3 rounded-xl bg-blue-500 dark:bg-blue-600 text-white">
-                                <div class="message-content text-sm prose dark:prose-invert max-w-none">
-                                    <!-- 用户消息文本将注入到这里 -->
+                    <!-- 模型下拉菜单（带缩放淡入动画） -->
+                    <transition name="zoom-fade">
+                        <div v-if="isModelMenuOpen"
+                            class="absolute right-0 mt-3 w-64 bg-white dark:bg-[#1c1c1f] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-2xl">
+                            <!-- 遍历模型列表，当前选中项高亮并显示对钩图标 -->
+                            <div v-for="m in models" :key="m.id" @click="selectModel(m)"
+                                :class="[selectedModel.id === m.id ? 'bg-gray-100 dark:bg-white/5 text-zinc-900 dark:text-white' : 'text-zinc-500 hover:bg-gray-50 dark:hover:bg-white/[0.02] hover:text-zinc-800 dark:hover:text-zinc-200']"
+                                class="px-6 py-4 cursor-pointer transition-all flex justify-between items-center group/item">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-[10px] font-black uppercase tracking-widest">{{ m.name }}</span>
+                                    <span
+                                        class="text-[8px] text-zinc-400 dark:text-zinc-600 uppercase tracking-tight">base
+                                        node</span>
                                 </div>
-                            </div>
-                            <!-- 用户头像 -->
-                            <span
-                                class="shrink-0 inline-flex items-center justify-center size-8 rounded-full bg-gray-400 text-white font-bold text-sm">
-                                你
-                            </span>
-                        </div>
-                        <!-- 用户思考过程容器（默认隐藏） -->
-                        <div class="reasoning-container mr-12 mt-2 mb-2 hidden text-right">
-                            <div
-                                class="reasoning-header flex items-center justify-between py-2 px-4 bg-gray-200 rounded-lg cursor-pointer dark:bg-gray-600 dark:text-gray-200">
-                                <span class="text-sm font-medium">显示思路</span>
-                                <div class="loading-dots hidden"><span></span><span></span><span></span></div>
-                                <i class="fas fa-caret-right text-gray-500 dark:text-gray-400"></i>
-                            </div>
-                            <div
-                                class="reasoning-content p-4 bg-white border border-t-0 border-gray-200 rounded-b-lg dark:bg-gray-800 dark:border-gray-700 prose dark:prose-invert max-w-none">
-                                <!-- 思考过程内容将注入到这里 -->
+                                <i v-if="selectedModel.id === m.id" class="fas fa-check text-[8px] text-blue-500"></i>
                             </div>
                         </div>
-                    </li>
-                </template>
-            </ul>
+                    </transition>
+                </div>
+            </header>
 
-            <!-- 文本输入/上传区域 -->
-            <div id="input-area-wrapper"
-                class="input-area-wrapper fixed bottom-0 z-10 w-full flex justify-center p-4 bg-gray-50 dark:bg-gray-900 transition-all duration-300">
-                <div class="input-container-inner max-w-3xl w-full flex flex-col items-center">
-                    <!-- 输入框和按钮的容器 -->
+            <!-- 对话消息流区域 -->
+            <div id="chat-flow"
+                class="flex-1 overflow-y-auto px-6 md:px-20 no-scrollbar relative flex flex-col pt-24 pb-48">
+
+                <!-- 欢迎界面：无对话历史时显示（带淡入下沉动画） -->
+                <transition name="welcome-fade">
+                    <div v-if="history.length === 0" key="welcome"
+                        class="flex-1 flex flex-col items-center justify-center text-center opacity-60 dark:opacity-40">
+                        <div
+                            class="w-20 h-20 bg-gray-200/50 dark:bg-zinc-900/50 rounded-3xl flex items-center justify-center text-4xl font-light text-zinc-500 dark:text-zinc-700 mb-10 border border-gray-200 dark:border-white/5">
+                            λ</div>
+                        <h2
+                            class="text-3xl font-light tracking-tight text-zinc-400 dark:text-zinc-500 mb-4 uppercase tracking-[0.2em]">
+                            Capture your inspiration here...</h2>
+                        <p
+                            class="text-2xl font-light tracking-tight text-zinc-400 dark:text-zinc-500 mb-4 uppercase tracking-[0.2em]">
+                            创造你的灵感...</p>
+                    </div>
+                </transition>
+
+                <!-- 消息列表：使用 transition-group 实现气泡入场动画 -->
+                <!-- 每条消息有唯一 id（msg-{index}），供滚动锚定定位 -->
+                <transition-group name="message-fade">
+                    <div v-for="(msg, i) in history" :key="'msg-'+i" :id="'msg-' + i"
+                        class="max-w-3xl mx-auto w-full mb-12 last:mb-20 mt-10 scroll-mt-28">
+
+                        <!-- 用户消息：右对齐，蓝色气泡 -->
+                        <div v-if="msg.role === 'user'" class="flex justify-end pr-4">
+                            <div
+                                class="bg-blue-600 text-white dark:bg-zinc-800 dark:text-zinc-100 px-6 py-4 rounded-3xl rounded-tr-none text-sm leading-relaxed border border-transparent dark:border-white/5 shadow-lg dark:shadow-2xl">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+
+                        <!-- AI 消息：左对齐，带 λ 头像，Markdown 渲染 -->
+                        <div v-else class="flex gap-8 group relative">
+                            <!-- λ 头像 -->
+                            <div
+                                class="w-10 h-10 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/5 flex items-center justify-center shrink-0 shadow-sm dark:shadow-md">
+                                <div class="lambda-avatar-mono text-[14px]">λ</div>
+                            </div>
+                            <!-- 消息内容：通过 v-html 渲染 Markdown 转换后的 HTML -->
+                            <div class="flex-1 min-w-0 pt-1 prose prose-zinc dark:prose-invert prose-sm max-w-none text-zinc-700 dark:text-zinc-300 leading-loose"
+                                v-html="renderAIContent(msg.content)"></div>
+                        </div>
+                    </div>
+
+                    <!-- 加载指示器：生成中时显示三个跳动圆点 -->
+                    <div v-if="isLoading" key="loading"
+                        class="max-w-3xl mx-auto w-full mb-12 flex items-center gap-8 mt-10">
+                        <div
+                            class="w-10 h-10 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/5 flex items-center justify-center shrink-0 animate-pulse">
+                            <div class="lambda-avatar-mono text-[14px]">λ</div>
+                        </div>
+                        <div class="flex items-center gap-2 pt-1">
+                            <!-- 三个圆点依次跳动，animation-delay 错开 0.2s -->
+                            <div class="w-1.5 h-1.5 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce"></div>
+                            <div
+                                class="w-1.5 h-1.5 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:0.2s]">
+                            </div>
+                            <div
+                                class="w-1.5 h-1.5 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:0.4s]">
+                            </div>
+                        </div>
+                    </div>
+                </transition-group>
+            </div>
+
+            <!-- 底部输入区域：固定在页面底部，带渐变遮罩 -->
+            <footer
+                class="p-10 z-20 absolute bottom-0 w-full bg-gradient-to-t from-gray-50 via-gray-50 dark:from-[#0e0e10] dark:via-[#0e0e10] to-transparent transition-colors duration-500">
+                <div class="max-w-3xl mx-auto relative group">
                     <div
-                        class="input-box relative flex flex-col w-full border border-gray-300 rounded-3xl shadow-md bg-white dark:bg-gray-800 dark:border-gray-700">
-                        <!-- 上方：输入框 -->
-                        <div class="flex items-center w-full px-2 pt-2">
-                            <textarea id="message-input"
-                                class="flex-grow p-1 block w-full bg-transparent border-none focus:outline-none focus:ring-0 resize-none overflow-hidden text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="How can ML help you" rows="1"></textarea>
-                        </div>
+                        class="relative flex items-center bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-2 pr-2 pl-4 shadow-xl dark:shadow-2xl focus-within:border-gray-300 dark:focus-within:border-white/20 transition-all">
 
-                        <!-- 下方：功能按钮行 -->
-                        <div class="flex items-center w-full pb-2 px-2">
-                            <!-- 文件上传按钮（位于输入框内，左侧） -->
-                            <label for="file-upload" id="upload-button"
-                                class="input-box-icon-btn flex-shrink-0 flex justify-center items-center h-8 w-8 text-gray-500 rounded-full cursor-pointer transition-colors duration-200 ml-1 mr-1">
-                                <i class="fas fa-plus text-base"></i>
-                            </label>
-                            <input type="file" id="file-upload" accept="image/*" class="hidden">
+                        <!-- 附件按钮（当前为预留功能） -->
+                        <button
+                            class="w-10 h-10 flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+                            <i class="fas fa-paperclip text-sm"></i>
+                        </button>
 
-                            <!-- 深度思考按钮 (现在是可点击的菜单) -->
-                            <button id="deep-thought-btn"
-                                class="input-box-chip-btn flex-shrink-0 py-1 px-2.5 flex items-center gap-x-1 rounded-full text-gray-700 relative mr-1 text-sm">
-                                <i class="fas fa-lightbulb text-yellow-500"></i>
-                                <span id="deep-thought-text" class="">深度思考</span>
-                                <i class="fas fa-caret-down ml-0.5 text-xs"></i>
-                                <!-- 深度思考模式选择菜单 -->
-                                <div id="deep-thought-dropdown"
-                                    class="deep-thought-dropdown absolute bottom-full left-0 mb-2 p-2 bg-white border border-gray-200 rounded-lg shadow-lg hidden dark:bg-gray-700 dark:border-gray-600 z-50">
-                                    <div class="dropdown-item py-1 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm"
-                                        data-mode="on">开启</div>
-                                    <div class="dropdown-item py-1 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm"
-                                        data-mode="off">关闭</div>
-                                    <div class="dropdown-item py-1 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-sm"
-                                        data-mode="auto">自动</div>
-                                </div>
-                            </button>
+                        <!-- 输入框：Enter 发送，Shift+Enter 换行 -->
+                        <!-- v-model 双向绑定 userInput，@keydown.enter.prevent 阻止默认换行 -->
+                        <textarea v-model="userInput" @keydown.enter.prevent="send" rows="1" placeholder="说点什么吧..."
+                            class="flex-1 bg-transparent py-4 px-3 outline-none text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-700 resize-none no-scrollbar"></textarea>
 
-                            <!-- Canvas 按钮 -->
-                            <button id="canvas-btn"
-                                class="input-box-chip-btn flex-shrink-0 py-1 px-2.5 flex items-center gap-x-1 rounded-full text-gray-700 mr-auto text-sm">
-                                <i class="fas fa-vector-square text-blue-500"></i>
-                                <span class="">Canvas</span>
-                            </button>
-
-                            <!-- 发送按钮（位于输入框内，右下角） -->
-                            <button type="button" id="send-btn"
-                                class="input-box-icon-btn flex-shrink-0 flex justify-center items-center h-8 w-8 rounded-full text-gray-500 disabled:opacity-50 disabled:pointer-events-none ml-auto">
-                                <i class="fas fa-paper-plane text-base rotate-45 -translate-y-px -translate-x-px"></i>
+                        <!-- 发送按钮：生成中或输入为空时禁用 -->
+                        <div class="pr-2">
+                            <button @click="send" :disabled="isLoading || !userInput.trim()"
+                                class="send-btn-base flex items-center justify-center">
+                                <i class="fas fa-arrow-up text-xs"></i>
                             </button>
                         </div>
                     </div>
+                </div>
+            </footer>
+        </main>
 
-                    <!-- 免责声明 -->
-                    <div class="disclaimer mt-3 text-xs text-gray-500 dark:text-gray-400 text-center w-full">
-                        扣1送地狱火！！！
+        <!-- ==================== 删除确认弹窗 ==================== -->
+        <!-- 使用 teleport 效果（此处用 fixed 定位实现），背景遮罩点击可关闭 -->
+        <transition name="zoom-fade">
+            <div v-if="isDeleteModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                <!-- 半透明遮罩 -->
+                <div class="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-xl"
+                    @click="isDeleteModalOpen = false"></div>
+                <!-- 弹窗主体 -->
+                <div
+                    class="relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 w-full max-w-sm p-10 rounded-[3rem] shadow-2xl text-center">
+                    <!-- 红色垃圾桶图标 -->
+                    <div
+                        class="w-16 h-16 bg-red-100 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-trash-alt text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-2">确认删除对话?</h3>
+                    <p class="text-zinc-500 text-xs mb-8">此操作将永久抹除这段对话。</p>
+                    <div class="flex gap-4">
+                        <button @click="isDeleteModalOpen = false"
+                            class="flex-1 py-4 bg-gray-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-zinc-700 transition">返回</button>
+                        <button @click="confirmDelete"
+                            class="flex-1 py-4 bg-red-500 dark:bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 dark:hover:bg-red-700 transition">删除</button>
                     </div>
                 </div>
             </div>
-        </div>
+        </transition>
     </div>
 
-    <!-- JS 插件 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- 自定义 JS -->
-    <script src="/frontend/js/script.js" type="module"></script>
+    <!-- 引入 Vue3 组合式 API 业务逻辑 -->
+    <script src="/static/app.js"></script>
 </body>
 
 </html>

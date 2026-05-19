@@ -1,0 +1,363 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================================
+   基础重置与工具类
+   ========================================= */
+body {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.scroll-mt-28 {
+    scroll-margin-top: 7rem;
+}
+
+/* =========================================
+   全局核心动画
+   ========================================= */
+.sidebar-transition {
+    transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    will-change: width;
+}
+
+/* 侧边栏内部文字/图标动画 */
+.sidebar-fade-enter-active {
+    transition: opacity 0.4s ease 0.1s, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s !important;
+}
+
+.sidebar-fade-leave-active {
+    transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+
+.sidebar-fade-enter-from,
+.sidebar-fade-leave-to {
+    opacity: 0 !important;
+    transform: translateX(-5px) !important;
+}
+
+.sidebar-fade-enter-from {
+    transform: translateX(-10px) !important;
+}
+
+/* 欢迎语动画 */
+.welcome-fade-enter-active,
+.welcome-fade-leave-active {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    /* 防止在过渡期遮挡下方元素 */
+    will-change: transform, opacity !important;
+}
+
+/* 放弃复杂的动画混用，回归最纯粹的硬件加速 Transition */
+.welcome-fade-enter-active {
+    /* 0.6秒丝滑入场，带有极强的高级阻尼感 */
+    transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.welcome-fade-leave-active {
+    /* 0.25秒快速退场，干脆利落 */
+    transition: opacity 0.25s ease-in, transform 0.25s ease-in !important;
+}
+
+/* 统一控制起点与终点：带轻微的下沉和缩放 */
+.welcome-fade-enter-from,
+.welcome-fade-leave-to {
+    opacity: 0 !important;
+    transform: translate3d(0, 20px, 0) scale(0.96) !important;
+}
+
+/* 聊天气泡动画 */
+.message-fade-enter-active {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.message-fade-leave-active {
+    transition: all 0.2s ease-in;
+}
+
+.message-fade-enter-from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.97);
+}
+
+/* 弹窗缩放动画 */
+.zoom-fade-enter-active,
+.zoom-fade-leave-active {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zoom-fade-enter-from,
+.zoom-fade-leave-to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-8px);
+}
+
+/* 主题切换图标旋转动画 */
+.theme-spin-enter-active,
+.theme-spin-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-spin-enter-from {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.5);
+}
+
+.theme-spin-leave-to {
+    opacity: 0;
+    transform: rotate(180deg) scale(0.5);
+}
+
+/* =========================================
+   通用 UI 组件样式
+   ========================================= */
+.send-btn-base {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #18181b;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.send-btn-base:hover:not(:disabled) {
+    transform: scale(1.08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.send-btn-base:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.send-btn-base:disabled {
+    background: #e4e4e7;
+    color: #a1a1aa;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.lambda-avatar-mono {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: serif;
+    font-weight: bold;
+    color: #71717a;
+}
+
+/* 代码块容器 */
+.code-container {
+    position: relative;
+    margin: 1.5rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f4f4f5;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #e4e4e7;
+    font-size: 10px;
+    font-weight: bold;
+    color: #52525b;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.copy-btn {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.copy-btn:hover {
+    color: #3b82f6;
+}
+
+.prose {
+    line-height: 1.8;
+}
+
+/* =========================================
+   深色模式统一覆盖 (所有 .dark 选择器归类)
+   ========================================= */
+.dark body {
+    background-color: #0e0e10 !important;
+    color: #e4e4e7 !important;
+}
+
+.dark aside {
+    background-color: #161618 !important;
+    border-right-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark header {
+    background-color: rgba(14, 14, 16, 0.8) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark footer {
+    background: linear-gradient(to top, #0e0e10 40%, rgba(14, 14, 16, 0) 100%) !important;
+}
+
+.dark footer div.bg-white {
+    background-color: #18181b !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark footer textarea {
+    color: #e4e4e7 !important;
+}
+
+.dark footer textarea::placeholder {
+    color: #52525b !important;
+}
+
+/* 侧边栏底部区域背景 */
+.dark aside .bg-gray-50\/50,
+.dark aside .dark\:bg-zinc-900\/10 {
+    background-color: transparent !important;
+    border-top-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 发送按钮深色适配 */
+.dark .send-btn-base {
+    background: #e4e4e7 !important;
+    color: #18181b !important;
+}
+
+.dark .send-btn-base:hover:not(:disabled) {
+    background: #ffffff !important;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark .send-btn-base:disabled {
+    background: #27272a !important;
+    color: #52525b !important;
+}
+
+/* Lambda 头像 */
+.dark .lambda-avatar-mono {
+    color: #a1a1aa;
+}
+
+.dark #chat-flow .lambda-avatar-mono {
+    color: #52525b !important;
+    text-shadow: none !important;
+}
+
+.dark #chat-flow .dark\:bg-zinc-900 {
+    background-color: #1c1c1f !important;
+    border-color: rgba(255, 255, 255, 0.03) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 代码块深色适配 */
+.dark .code-container {
+    background: #1a1a1e;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .code-header {
+    background: #27272a;
+    color: #a1a1aa;
+}
+
+.dark .copy-btn:hover {
+    color: #fff;
+}
+
+/* 模型切换按钮深色适配 */
+.dark header button.bg-gray-100 {
+    background-color: #18181b !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    color: #d4d4d8 !important;
+}
+
+.dark header button.bg-gray-100:hover {
+    background-color: #27272a !important;
+}
+
+.dark .absolute.right-0.mt-3 {
+    background-color: #1c1c1f !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 侧边栏当前对话高亮 */
+.dark aside .bg-gray-100 {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: transparent !important;
+}
+
+.dark aside .bg-gray-100 span,
+.dark aside .bg-gray-100 i.fa-comment-dots {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.dark aside .border-gray-200.dark\:border-white\/5 {
+    border-color: transparent !important;
+    background-color: #27272a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 温度滑块色彩 */
+.dark .text-cyan-400 {
+    color: #22d3ee !important;
+}
+
+.dark .bg-cyan-400\/10 {
+    background-color: rgba(34, 211, 238, 0.1) !important;
+}
+
+/* 全局文字颜色统一 */
+.dark .text-zinc-800,
+.dark .text-zinc-700,
+.dark .text-zinc-600,
+.dark .text-zinc-500 {
+    color: #e4e4e7 !important;
+}
+
+.dark .text-zinc-400,
+.dark .text-zinc-300 {
+    color: #a1a1aa !important;
+}
+
+.dark .text-zinc-200,
+.dark .text-zinc-100 {
+    color: #ffffff !important;
+}
+
+.dark aside .text-zinc-600,
+.dark aside .text-zinc-500,
+.dark aside .text-zinc-400 {
+    color: #d4d4d8 !important;
+}
+
+.dark aside span[class*="text-zinc-600"] {
+    color: #a1a1aa !important;
+}
+
+.dark button .text-zinc-200 {
+    color: #ffffff !important;
+}

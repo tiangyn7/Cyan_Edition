@@ -1,3 +1,4 @@
 {
-    "liveServer.settings.port": 81
+    "liveServer.settings.port": 81,
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }
