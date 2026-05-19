@@ -31,20 +31,17 @@
 ## 2. 项目结构
 
 ```plaintext
-ML-AI-CHAT/
-├── .env               # 存储敏感环境变量（如 API 密钥），请勿提交到 Git!
-├── README.md          # 项目主说明文档（当前文件）
-├── backend/           # Flask 后端应用代码
-│   ├── app.py
-│   ├── config.py
-│   └── requirements.txt
-├── data/              # 存储 LLM 相关的 JSONL 数据文件
-│   ├── qa_data.jsonl
-│   └── prompts.jsonl
-├── frontend/          # 网页界面文件
-│   ├── index.html
-│   └── ... (其他前端资源，如 CSS/JS)
-└── venv/              # Python 虚拟环境，请勿提交到 Git!
+Cyan_Edition/
+├── .env                    # 环境变量配置文件（存储 API 密钥，请勿提交到版本控制）
+├── README.md               # 项目说明文档
+├── backend/                # Flask 后端应用
+│   ├── app.py              # 主应用程序入口
+│   ├── config.py           # 配置文件（API 密钥加载、客户端初始化）
+│   └── requirements.txt    # Python 依赖列表
+├── frontend/               # 前端静态文件
+│   ├── index.html          # 主页面
+│   └── static/             # CSS、JS 等静态资源
+└── venv/                   # Python 虚拟环境（请勿提交到版本控制）
 ```
 
 ## 3. 功能特性
