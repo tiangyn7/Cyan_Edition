@@ -176,16 +176,45 @@ response：{"status": "success"}
 ```
 
 ## 7. 技术框架与依赖
-HTML5/CSS3/JavaScript
-Tailwind CSS
-jQuery
-安装 Tailwind CSS（如需本地编译）：
+### 7.1 后端
+| 组件 | 技术 |
+|------|-----|
+| Web 框架 | FastAPI |
+| ORM | SQLAlchemy |
+|数据库 |	SQLite (可替换为 PostgreSQL)
+|流式响应	| Server-Sent Events (SSE)
+|模型 API |	火山引擎 Ark SDK（豆包/DeepSeek）
+|环境变量管理 |	python-dotenv
+|服务器 |	Uvicorn
 
-```bash
-npm install tailwindcss postcss autoprefixer --save-dev
-```
+### 7.2 前端
+| 组件 | 技术 |
+|------|-----|
+|核心框架 |Vue 3 (CDN)
+|UI 样式 |Tailwind CSS + 自定义 CSS 动画
+|Markdown |渲染	marked.js
+|代码高亮	|highlight.js
+|图标库	|Font Awesome 6
+|HTTP 请求	|Fetch API (原生)
+|流式数据处理	|ReadableStream + 手动 SSE 解析
 
+### 7.3 开发与测试
+* 并发测试：test_concurrent.py 基于 asyncio + aiohttp
+* 版本控制：建议使用 Git，Key.env 和 chat.db 应加入 .gitignore
 ## 8. 注意事项
+* **API Key 安全：** 请勿将 Key.env 提交至版本控制，已内置在项目根目录的 .gitignore 示例中需自行添加。
+
+* **模型 ID 有效性：** main.py 中 models 列表的 id 必须与火山引擎控制台部署的推理接入点 ID 一致，否则调用失败。
+
+* **数据库迁移：** 当前使用 Base.metadata.create_all 自动建表，生产环境建议使用 Alembic 管理 schema 变更。
+
+* **并发限制：** 测试脚本 test_concurrent.py 验证了 5/10/15 并发，但实际并发受限于模型服务 QPS 及服务器资源。
+
+* **前端路径：** 确保 main.py 中 FRONTEND_DIR 路径正确指向 frontend 目录，若调整目录结构需同步修改。
+
+* **代码高亮：** 每次流式结束后自动调用 hljs.highlightAll()，动态添加的代码块会被正确渲染。
+
+* **生产部署：** 建议使用 gunicorn + uvicorn workers 部署 FastAPI，前端静态文件可放置于 Nginx 或 CDN。
 
 ## 9. 体验地址
 https://dalonggou.xyz/
