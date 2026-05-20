@@ -23,10 +23,10 @@ createApp({
 
         // 模型配置列表，新增模型仅需在此追加记录
         const models = ref([
-            { name: 'Doubao Pro', shortName: 'PRO', id: 'ep-20260326054350-rkpkx' },
-            { name: 'Doubao Mini', shortName: 'FAST', id: 'ep-20260326060205-xbk6t' },
-            { name: 'Doubao Code', shortName: 'CODE', id: 'ep-20260326060323-w48xb' },
-            { name: 'DeepSeek V3.2', shortName: 'V3.2', id: 'ep-20260425070325-8z7ws' }
+            { name: 'Doubao Pro', shortName: 'PRO', id: 'xx-xx-xx' },
+            { name: 'Doubao Mini', shortName: 'FAST', id: 'xx-xx-xx' },
+            { name: 'Doubao Code', shortName: 'CODE', id: 'xx-xx-xx' },
+            { name: 'DeepSeek V3.2', shortName: 'V3.2', id: 'xx-xx-xx' }
         ]);
         const selectedModel = ref(models.value[3]);  // 默认选中第一个模型
 
